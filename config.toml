@@ -1,5 +1,13 @@
-[iso]
-product = "Angel-OS"
-version = "alpha"
-vendor = "fedora"   
-isolabel = "Angel-OS-Alpha"
+
+[customizations.installer.kickstart]
+contents = """
+user --name=liveuser --password=root --plaintext --groups=wheel
+# Or use %post for chpasswd if you prefer
+%post
+echo 'liveuser:root' | chpasswd
+%end
+"""
+
+[[customizations.filesystem]]
+mountpoint = "/"
+size = 32212254720  
