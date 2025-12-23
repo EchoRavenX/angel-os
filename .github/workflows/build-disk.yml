@@ -18,7 +18,7 @@ on:
     branches:
       - main
     paths:
-      - './config.toml'                  # Now triggers on config changes too
+      - './config.toml'
       - './.github/workflows/build-disk.yml'
 env:
   IMAGE_NAME: ${{ github.event.repository.name }}
@@ -61,11 +61,11 @@ jobs:
         id: build
         uses: osbuild/bootc-image-builder-action@main
         with:
-          config-file: ./config.toml   # Clean, root-level dummy config
+          config-file: ./config.toml   # Empty for defaults, fill later for user/kickstart filth
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: anaconda-iso
-          additional-args: --use-librepo=True
+          additional-args: --use-librepo=True --rootfs ext4
       - name: Upload ISO and Checksum to Job Artifacts
         if: inputs.upload-to-s3 != true && github.event_name != 'pull_request'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
