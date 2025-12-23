@@ -1,4 +1,3 @@
-
 name: Build disk images
 on:
   workflow_dispatch:
@@ -61,7 +60,7 @@ jobs:
         id: build
         uses: osbuild/bootc-image-builder-action@main
         with:
-          config-file: ./config.toml   # Empty for defaults, fill later for user/kickstart filth
+          config-file: ./config.toml   # Empty for defaults (unattended COSMIC install)
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: anaconda-iso
