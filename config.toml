@@ -1,9 +1,0 @@
-      - name: Build Anaconda ISO
-        id: build
-        uses: osbuild/bootc-image-builder-action@main
-        with:
-          config-file: ./config.toml   # Right in root – clean and simple, no subfolders
-          image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
-          types: anaconda-iso
-          additional-args: --use-librepo=True
