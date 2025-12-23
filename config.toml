@@ -1,14 +1,20 @@
-
 [customizations.installer.kickstart]
 contents = """
-user --name=liveuser --password=root --plaintext --groups=wheel
+# Full branding override
+product --name="Angel OS" --version="1.0"
 
-%post
-echo 'liveuser:root' | chpasswd
+vendor "angelos"
+
+volid "ANGEL-OS"
+
+user --name=liveuser --password=root --plaintext --groups=wheel
+%anaconda
+pwpolicy root --minlen=1 --notstrict --nochanges --emptyok
+pwpolicy user --minlen=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=1 --notstrict --nochanges --emptyok
 %end
 """
 
 [[customizations.filesystem]]
 mountpoint = "/"
-size = 32212254720  
-
+size = 34359738368  
