@@ -1,3 +1,4 @@
+
 name: Build disk images
 on:
   workflow_dispatch:
@@ -17,6 +18,7 @@ on:
     branches:
       - main
     paths:
+      - './config.toml'                  # Now triggers on config changes too
       - './.github/workflows/build-disk.yml'
 env:
   IMAGE_NAME: ${{ github.event.repository.name }}
@@ -59,7 +61,7 @@ jobs:
         id: build
         uses: osbuild/bootc-image-builder-action@main
         with:
-          # No config-file → uses defaults (perfect for basic unattended ISO)
+          config-file: ./config.toml   # Clean, root-level dummy config
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: anaconda-iso
