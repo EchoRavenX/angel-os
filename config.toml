@@ -1,0 +1,5 @@
+[iso]
+product = "Angel-OS"
+version = "alpha"
+vendor = "fedora"   
+isolabel = "Angel-OS-Alpha"
