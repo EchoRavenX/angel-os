@@ -39,3 +39,4 @@ System Requirements
 4 GB RAM (8 GB recommended for best experience)
 20 GB storage space
 Modern graphics card (Wayland-compatible)
+https://angel-os.neocities.org/
