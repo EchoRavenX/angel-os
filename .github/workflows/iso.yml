@@ -53,7 +53,7 @@ jobs:
           image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           builder-distro: centos      
           livesys: false              
-          flatpaks-list: ${{ github.workspace }}/flatpaks.list   
+          flatpaks-list: ${{ github.workspace }}/flatpaks.list  
 
       - name: Rename and Checksum ISO
         run: |
