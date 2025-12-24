@@ -50,9 +50,9 @@ jobs:
         uses: ublue-os/titanoboa@main
         with:
           image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          builder-distro: centos
-          livesys: true
-          flatpaks-list: ${{ github.workspace }}/flatpaks.list   
+          builder-distro: centos      
+          livesys: false              
+          flatpaks-list: ${{ github.workspace }}/flatpaks.list  
 
       - name: Rename and Checksum ISO
         run: |
