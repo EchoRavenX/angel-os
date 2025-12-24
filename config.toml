@@ -1,4 +1,4 @@
 
 [[customizations.filesystem]]
 mountpoint = "/"
-size = 34359738368  
+size = 34359738368 
