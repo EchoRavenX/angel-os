@@ -1,3 +1,4 @@
+![229ad191-990f-4336-858b-f019579ad224(1)](https://github.com/user-attachments/assets/10abb465-d271-41ef-9cd2-f7a057300117)
 Introduction
 Angel OS is a custom Linux-based operating system designed for users seeking a beautiful, fast, and secure desktop experience. Built with modernity in mind, Angel OS defaults to the COSMIC Desktop Environment – a revolutionary Wayland-native DE developed by System76 in Rust.
 Whether you're a developer, creator, or everyday user, Angel OS brings elegance, performance, and customization to your fingertips – all with an angelic theme of purity, light, and effortless grace.
