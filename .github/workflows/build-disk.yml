@@ -17,23 +17,27 @@ on:
     branches:
       - main
     paths:
-      - './config.toml'
+      - './config.toml'  # Remove if you delete config.toml
       - './.github/workflows/build-disk.yml'
+
 env:
   IMAGE_NAME: ${{ github.event.repository.name }}
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
+
 jobs:
   build:
-    name: Build Anaconda ISO
-    runs-on: ${{ inputs.platform == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    name: Build Live ISO (Titanoboa)
+    runs-on: ubuntu-24.04  # Titanoboa works great on standard ubuntu-24.04, no arm needed yet (check later if arm64 support added)
     permissions:
       contents: read
       packages: read
       id-token: write
+
     steps:
       - name: Prepare environment
         run: |
@@ -43,37 +47,36 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           echo "USER_UID=${USER_UID}" >> ${GITHUB_ENV}
           echo "USER_GID=${USER_GID}" >> ${GITHUB_ENV}
-      - name: Install dependencies
-        if: inputs.platform == 'arm64'
-        run: |
-          set -x
-          sudo apt update -y
-          sudo apt install -y podman
+
       - name: Maximize build space
-        if: inputs.platform != 'arm64'
-        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9
-        with:
-          remove-codeql: true
+        uses: ublue-os/remove-unwanted-software@v9  # Keep this, it's good
+
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-      - name: Build Anaconda ISO
+        uses: actions/checkout@v4
+
+      - name: Build ISO with Titanoboa
         id: build
-        uses: osbuild/bootc-image-builder-action@main
+        uses: ublue-os/titanoboa@main
         with:
-          config-file: ./config.toml   # Empty for defaults (unattended COSMIC install)
-          image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
-          types: anaconda-iso
-          additional-args: --use-librepo=True --rootfs ext4
+          image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}  
+          builder-distro: fedora  
+      - name: Rename and Checksum ISO
+        run: |
+          mkdir -p output
+          mv ${{ steps.build.outputs.iso-dest }} output/angel-os-$(date +%Y%m%d).iso
+          cd output
+          sha256sum *.iso > angel-os-$(date +%Y%m%d).iso-CHECKSUM
+
       - name: Upload ISO and Checksum to Job Artifacts
         if: inputs.upload-to-s3 != true && github.event_name != 'pull_request'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@v4
         with:
-          path: ${{ steps.build.outputs.output-directory }}
-          if-no-files-found: error
+          name: angel-os-iso
+          path: output/
           retention-days: 0
           compression-level: 0
           overwrite: true
+
       - name: Upload to S3
         if: inputs.upload-to-s3 == true && github.event_name != 'pull_request'
         shell: bash
@@ -84,7 +87,7 @@ jobs:
           RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           RCLONE_CONFIG_S3_REGION: ${{ secrets.S3_REGION }}
           RCLONE_CONFIG_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          SOURCE_DIR: ${{ steps.build.outputs.output-directory }}
+          SOURCE_DIR: output/
         run: |
           sudo apt-get update
           sudo apt-get install -y rclone
