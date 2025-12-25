@@ -46,7 +46,6 @@ jobs:
           builder-distro: centos
           livesys: false
           flatpaks-list: ${{ github.workspace }}/flatpaks.list
-          hook-post-rootfs: ${{ github.workspace }}/hook.sh  # <<< ADDED HOOK
       - name: Rename and Checksum ISO
         run: |
           mkdir -p output
