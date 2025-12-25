@@ -1,4 +1,3 @@
-
 name: Build disk images
 on:
   workflow_dispatch:
@@ -12,16 +11,13 @@ on:
   pull_request:
     branches:
       - main
-
 env:
   IMAGE_NAME: ${{ github.event.repository.name }}
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
-
 jobs:
   build:
     name: Build Live ISO (Titanoboa)
@@ -29,7 +25,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-
     steps:
       - name: Prepare environment
         run: |
@@ -39,22 +34,18 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           echo "USER_UID=${USER_UID}" >> ${GITHUB_ENV}
           echo "USER_GID=${USER_GID}" >> ${GITHUB_ENV}
-
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@v9
-
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Build ISO with Titanoboa
         id: build
         uses: ublue-os/titanoboa@main
         with:
           image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          builder-distro: centos      
-          livesys: false              
-          flatpaks-list: ${{ github.workspace }}/flatpaks.list  
-
+          builder-distro: centos
+          livesys: false
+          flatpaks-list: ${{ github.workspace }}/flatpaks.list
       - name: Rename and Checksum ISO
         run: |
           mkdir -p output
@@ -62,7 +53,6 @@ jobs:
           mv "${{ steps.build.outputs.iso-dest }}" "output/$ISO_NAME"
           cd output
           sha256sum "$ISO_NAME" > "$ISO_NAME.sha256sum"
-
       - name: Upload ISO and Checksum to Artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
