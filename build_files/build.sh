@@ -5,13 +5,13 @@ set -ouex pipefail
 ### Install packages
 
 
-dnf5 remove firefox
-dbf5 remove firefox-langpacks
+dnf5 remove  -y firefox
+dbf5 remove  -y firefox-langpacks
 dnf5 -y copr enable ublue-os/staging
-dnf5 swap ffmpeg-free ffmpeg --allowerasing
+dnf5  -y swap ffmpeg-free ffmpeg --allowerasing
 
- dnf5 update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
- dnf5 install tlp tlp-rdw
+ dnf5 update  -y  @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+ dnf5 install  -y tlp tlp-rdw
 
 #### System Unit File
 
