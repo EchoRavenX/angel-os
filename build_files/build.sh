@@ -6,7 +6,7 @@ set -ouex pipefail
 
 
 dnf5 remove  -y firefox
-dbf5 remove  -y firefox-langpacks
+dnf5 remove  -y firefox-langpacks
 dnf5 -y copr enable ublue-os/staging
 dnf5  -y swap ffmpeg-free ffmpeg --allowerasing
 
