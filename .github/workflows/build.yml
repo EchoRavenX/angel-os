@@ -1,65 +1,121 @@
-name: Build disk images
+name: Build container image
 on:
-  workflow_dispatch:
-    inputs:
-      platform:
-        required: true
-        type: choice
-        options:
-          - amd64
-          - arm64
   pull_request:
     branches:
       - main
+  schedule:
+    - cron: '05 10 * * *'  # 10:05am UTC everyday
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/README.md'
+  workflow_dispatch:
+
 env:
-  IMAGE_NAME: ${{ github.event.repository.name }}
+  IMAGE_DESC: "angel os"
+  IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
+  IMAGE_LOGO_URL: "https://angel-os.neocities.org/angelic-wings-logo-design-majestic-white-surrounding-word-angel-symbolizing-purity-protection-freedom-spirituality-grace-360101281.webp"
+  IMAGE_NAME: "${{ github.event.repository.name }}"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}-${{ inputs.brand_name}}-${{ inputs.stream_name }}
   cancel-in-progress: true
+
 jobs:
-  build:
-    name: Build Live ISO (Titanoboa)
+  build_push:
+    name: Build and push image
     runs-on: ubuntu-24.04
+
     permissions:
       contents: read
-      packages: read
+      packages: write
+
     steps:
       - name: Prepare environment
         run: |
-          USER_UID=$(id -u)
-          USER_GID=$(id -g)
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
-          echo "USER_UID=${USER_UID}" >> ${GITHUB_ENV}
-          echo "USER_GID=${USER_GID}" >> ${GITHUB_ENV}
-      - name: Maximize build space
-        uses: ublue-os/remove-unwanted-software@v9
+
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Build ISO with Titanoboa
-        id: build
-        uses: ublue-os/titanoboa@main
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Maximize build space
+        uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
+
+      - name: Mount BTRFS for podman storage
+        id: container-storage-action
+        uses: ublue-os/container-storage-action@911baca08baf30c8654933e9e9723cb399892140
+        continue-on-error: true 
         with:
-          image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          builder-distro: centos
-          livesys: false
-          flatpaks-list: ${{ github.workspace }}/flatpaks.list
-          hook-post-rootfs: ${{ github.workspace }}/hook.sh  # <<< ADDED THIS
-      - name: Rename and Checksum ISO
+          target-dir: /var/lib/containers
+          mount-opts: compress-force=zstd:2
+
+      - name: Get current date
+        id: date
         run: |
-          mkdir -p output
-          ISO_NAME="angel-os-$(date +%Y%m%d).iso"
-          mv "${{ steps.build.outputs.iso-dest }}" "output/$ISO_NAME"
-          cd output
-          sha256sum "$ISO_NAME" > "$ISO_NAME.sha256sum"
-      - name: Upload ISO and Checksum to Artifacts
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+          echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
+
+      - name: Image Metadata
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
+        id: metadata
         with:
-          name: angel-os-iso
-          path: output/
-          retention-days: 7
-          compression-level: 0
-          overwrite: true
+          tags: |
+            type=raw,value=${{ env.DEFAULT_TAG }}
+            type=raw,value=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
+            type=raw,value={{date 'YYYYMMDD'}}
+            type=sha,enable=${{ github.event_name == 'pull_request' }}
+            type=ref,event=pr
+          labels: |
+            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/${{ github.sha }}/README.md
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+            org.opencontainers.image.description=${{ env.IMAGE_DESC }}
+            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/${{ github.sha }}/README.md
+            org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/blob/${{ github.sha }}/Containerfile
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/tree/${{ github.sha }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
+            io.artifacthub.package.deprecated=false
+            io.artifacthub.package.keywords=${{ env.IMAGE_KEYWORDS }}
+            io.artifacthub.package.license=Apache-2.0
+            io.artifacthub.package.logo-url=${{ env.IMAGE_LOGO_URL }}
+            io.artifacthub.package.prerelease=false
+            containers.bootc=1
+          sep-tags: " "
+          sep-annotations: " "
+
+      - name: Build Image
+        id: build_image
+        uses: redhat-actions/buildah-build@7a95fa7ee0f02d552a32753e7414641a04307056
+        with:
+          containerfiles: |
+            ./Containerfile
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          oci: false
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push To GHCR
+        uses: redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        id: push
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_PASSWORD: ${{ github.token }}
+        with:
+          registry: ${{ env.IMAGE_REGISTRY }}
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
