@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+hostnamectl set-hostname "angel"
 
 echo "Angel OS: Setting easy live credentials"
 
