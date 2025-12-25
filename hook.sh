@@ -1,16 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# Create liveuser if it doesn't exist
-if ! id -u liveuser >/dev/null 2>&1; then
-    useradd -m -G wheel liveuser
-fi
+echo "Angel OS: Setting easy live credentials"
 
-passwd -d liveuser
+
+useradd -m -G wheel liveuser || true
+
+echo "liveuser:angel" | chpasswd
+
+
+echo "liveuser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/liveuser
+chmod 0440 /etc/sudoers.d/liveuser
 
 mkdir -p /etc/greetd
-
-cat <<EOF > /etc/greetd/config.toml
+cat > /etc/greetd/config.toml <<EOF
 [terminal]
 vt = 1
 
@@ -20,5 +23,6 @@ user = "liveuser"
 autologin = true
 EOF
 
-
-echo "Auto-login enabled for liveuser"
+echo "Live username: liveuser"
+echo "Live password: angel"
+echo "Auto-login attempted – type password if prompted"
