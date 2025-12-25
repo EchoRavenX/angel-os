@@ -14,9 +14,7 @@ dnf5 install -y \
     https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-rawhide.noarch.rpm
 dnf5 group install -y multimedia --setopt=install_weak_deps=False --exclude=PackageKit-gstreamer-plugin
 
- dnf5 install  -y tlp tlp-rdw
 
 #### System Unit File
 
 systemctl enable podman.socket
- systemctl enable --now tlp
