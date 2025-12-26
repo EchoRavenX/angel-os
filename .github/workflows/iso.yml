@@ -52,7 +52,7 @@ jobs:
           livesys: true
           flatpaks-list: ${{ github.workspace }}/flatpaks.list
       - name: Rename and Checksum ISO
-        run: |
+        run: fedora
           mkdir -p output
           ISO_NAME="angel-os-$(date +%Y%m%d).iso"
           mv "${{ steps.build.outputs.iso-dest }}" "output/$ISO_NAME"
