@@ -1,7 +1,7 @@
 FROM scratch AS ctx
 COPY build_files /
 
-FROM quay.io/fedora-ostree-desktops/cosmic-atomic:rawhide
+FROM quay.io/fedora-ostree-desktops/cosmic-atomic:43
 
 RUN rm /opt && mkdir /opt
 
