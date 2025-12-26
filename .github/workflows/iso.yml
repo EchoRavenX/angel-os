@@ -46,10 +46,11 @@ jobs:
       - name: Build ISO with Titanoboa
         id: build
         uses: ublue-os/titanoboa@main
+        env:
+          TITANOBOA_BUILDER_IMAGE: quay.io/fedora/fedora:43  
         with:
           image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           builder-distro: fedora
-          builder-image: quay.io/fedora/fedora:43
           livesys: true
           flatpaks-list: ${{ github.workspace }}/flatpaks.list
       - name: Rename and Checksum ISO
