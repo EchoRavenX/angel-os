@@ -4,7 +4,7 @@ set -ouex pipefail
 
 ### Install packages
 
-
+dnf5 install -y anaconda-live libblockdev-btrfs
 dnf5 remove  -y firefox
 dnf5 remove  -y firefox-langpacks
 dnf5 -y copr enable ublue-os/staging

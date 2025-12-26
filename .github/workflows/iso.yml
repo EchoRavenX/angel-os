@@ -26,7 +26,7 @@ concurrency:
 jobs:
   build:
     name: Build Live ISO (Titanoboa)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -48,8 +48,8 @@ jobs:
         uses: ublue-os/titanoboa@main
         with:
           image-ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          builder-distro: centos
-          livesys: false
+          builder-distro: fedora
+          livesys: true
           flatpaks-list: ${{ github.workspace }}/flatpaks.list
       - name: Rename and Checksum ISO
         run: |
