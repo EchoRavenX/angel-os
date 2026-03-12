@@ -42,7 +42,7 @@ jobs:
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@v9
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build ISO with Titanoboa
         id: build
         uses: ublue-os/titanoboa@main
